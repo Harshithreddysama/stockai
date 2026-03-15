@@ -1,0 +1,263 @@
+# StockAI — Complete Deployment Guide
+# =====================================
+# Follow every step in order. Takes ~45 minutes total.
+
+# ═══════════════════════════════════════════════
+# STEP 1 — Install required tools on your laptop
+# ═══════════════════════════════════════════════
+
+# 1a. Install Python 3.11
+#     → https://www.python.org/downloads/
+#     → During install: CHECK "Add Python to PATH"
+#     → Verify: open Terminal/CMD and type:
+python --version        # should show Python 3.11.x
+
+# 1b. Install Git
+#     → https://git-scm.com/downloads
+#     → Verify:
+git --version
+
+# 1c. Install VS Code (code editor)
+#     → https://code.visualstudio.com/
+#     → Install the "Python" extension inside VS Code
+
+
+# ═══════════════════════════════════════════════
+# STEP 2 — Set up the project locally
+# ═══════════════════════════════════════════════
+
+# 2a. Open Terminal (Mac) or Command Prompt (Windows)
+#     Navigate to where you want the project:
+cd Desktop
+
+# 2b. Extract the stock_app folder here (from the zip you downloaded)
+#     Then enter the folder:
+cd stock_app
+
+# 2c. Create a virtual environment
+python -m venv venv
+
+# 2d. Activate it
+#     On Windows:
+venv\Scripts\activate
+#     On Mac/Linux:
+source venv/bin/activate
+
+# 2e. Install all packages
+pip install -r requirements.txt
+#     ⚠️ This takes 5-10 minutes (TensorFlow is large). Let it complete.
+
+# 2f. Create your .env file
+#     Copy the example:
+copy .env.example .env        # Windows
+cp .env.example .env          # Mac/Linux
+
+#     Then open .env in VS Code and fill in your values (see Step 3 below)
+
+
+# ═══════════════════════════════════════════════
+# STEP 3 — Get your free API keys
+# ═══════════════════════════════════════════════
+
+# ── 3a. NewsAPI key (for news sentiment) ──
+#  1. Go to: https://newsapi.org/register
+#  2. Sign up with your email (free)
+#  3. Copy your API key
+#  4. Paste it in .env:   NEWS_API_KEY=paste_your_key_here
+
+# ── 3b. Gmail App Password (for email alerts) ──
+#  1. Go to: https://myaccount.google.com/security
+#  2. Enable "2-Step Verification" if not already on
+#  3. Go to: https://myaccount.google.com/apppasswords
+#  4. Select App = "Mail", Device = "Other", name it "StockAI"
+#  5. Google gives you a 16-character password
+#  6. Paste in .env:
+#       MAIL_USERNAME=yourgmail@gmail.com
+#       MAIL_PASSWORD=xxxx xxxx xxxx xxxx    (the 16-char password)
+
+# ── 3c. Generate a SECRET_KEY ──
+#  Run this in Python:
+python -c "import secrets; print(secrets.token_hex(32))"
+#  Copy the output and paste in .env:   SECRET_KEY=paste_output_here
+
+
+# ═══════════════════════════════════════════════
+# STEP 4 — Test locally first
+# ═══════════════════════════════════════════════
+
+# Make sure venv is active, then:
+python app.py
+
+# You should see:
+#   * Running on http://127.0.0.1:5000
+#   * Database created
+
+# Open browser → http://localhost:5000
+# Test: register, login, analyze AAPL
+
+# If it works → proceed to deploy!
+# Press Ctrl+C to stop.
+
+
+# ═══════════════════════════════════════════════
+# STEP 5 — Push to GitHub
+# ═══════════════════════════════════════════════
+
+# 5a. Create a GitHub account at https://github.com (free)
+
+# 5b. Create a new repository:
+#     → Click "+" → "New repository"
+#     → Name: stockai
+#     → Set to PUBLIC (required for free Render)
+#     → Do NOT add README, .gitignore, or license
+#     → Click "Create repository"
+
+# 5c. In your terminal (inside stock_app folder):
+git init
+git add .
+git commit -m "Initial commit — StockAI"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/stockai.git
+git push -u origin main
+
+# Replace YOUR_USERNAME with your actual GitHub username
+
+
+# ═══════════════════════════════════════════════
+# STEP 6 — Deploy on Render (free hosting)
+# ═══════════════════════════════════════════════
+
+# 6a. Go to https://render.com → Sign up with GitHub
+
+# 6b. Create a PostgreSQL database (free):
+#     → Dashboard → "New +" → "PostgreSQL"
+#     → Name: stockai-db
+#     → Plan: Free
+#     → Click "Create Database"
+#     → Wait 1-2 min, then copy "External Database URL"
+
+# 6c. Create the web service:
+#     → Dashboard → "New +" → "Web Service"
+#     → Connect your GitHub repo: stockai
+#     → Fill in:
+#         Name:          stockai
+#         Region:        Singapore (closest to India)
+#         Branch:        main
+#         Runtime:       Python 3
+#         Build Command: pip install -r requirements.txt
+#         Start Command: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+#         Plan:          Free
+
+# 6d. Add Environment Variables (click "Advanced" → "Add Environment Variable"):
+#
+#   KEY                VALUE
+#   ───────────────────────────────────────────────────
+#   SECRET_KEY         (your generated secret key)
+#   DATABASE_URL       (the PostgreSQL URL from step 6b)
+#   NEWS_API_KEY       (your NewsAPI key)
+#   MAIL_USERNAME      (your Gmail address)
+#   MAIL_PASSWORD      (your 16-char App Password)
+#   FLASK_ENV          production
+#   APP_URL            https://stockai.onrender.com  (your render URL)
+
+# 6e. Click "Create Web Service"
+#     → Render will build and deploy automatically
+#     → Takes 5-10 minutes first time
+#     → You'll get a URL like: https://stockai.onrender.com
+
+# 6f. Open your live URL in the browser → Register → Start using!
+
+
+# ═══════════════════════════════════════════════
+# STEP 7 — Using the app for real investing
+# ═══════════════════════════════════════════════
+
+# The app gives you: BUY / HOLD / SELL signals
+# To actually buy stocks, use a broker:
+#
+# India stocks (NSE/BSE):
+#   → Zerodha: https://zerodha.com  (best in India, ₹0 equity delivery)
+#   → Upstox:  https://upstox.com   (free account)
+#
+# US stocks (NYSE/NASDAQ):
+#   → INDmoney: https://www.indmoney.com (Indians can invest in US stocks)
+#
+# How to use this app with your broker:
+#   1. Run analysis on stocks you're interested in
+#   2. If signal = BUY + BULLISH news → consider buying on Zerodha
+#   3. Add bought stocks to your portfolio tracker here
+#   4. Watch your P&L in the dashboard
+#   5. When signal switches to SELL → consider selling
+#
+# ⚠️ ALWAYS start with a SMALL amount (₹1000-2000) to test
+# ⚠️ NEVER invest money you cannot afford to lose
+# ⚠️ This AI is a TOOL, not a guarantee. Use your own judgment too.
+
+
+# ═══════════════════════════════════════════════
+# STEP 8 — NSE/BSE stock symbols format
+# ═══════════════════════════════════════════════
+
+# For Indian stocks, add .NS (NSE) or .BO (BSE) after the symbol:
+#
+# RELIANCE.NS    → Reliance Industries (NSE)
+# TCS.NS         → Tata Consultancy Services
+# INFY.NS        → Infosys
+# HDFCBANK.NS    → HDFC Bank
+# ITC.NS         → ITC Limited
+# WIPRO.NS       → Wipro
+# TATAMOTORS.NS  → Tata Motors
+# SBIN.NS        → State Bank of India
+#
+# US stocks (no suffix needed):
+# AAPL, TSLA, MSFT, GOOGL, AMZN, NVDA, META, NFLX
+
+
+# ═══════════════════════════════════════════════
+# TROUBLESHOOTING
+# ═══════════════════════════════════════════════
+
+# Problem: pip install fails
+# Solution: pip install --upgrade pip, then retry
+
+# Problem: TensorFlow install fails on Windows
+# Solution: pip install tensorflow-cpu instead of tensorflow
+
+# Problem: "No data found for symbol"
+# Solution: Check the symbol is correct. Indian stocks need .NS suffix.
+
+# Problem: Email alerts not sending
+# Solution: Check Gmail App Password is correct (not your real password)
+#           Check MAIL_USERNAME has no extra spaces
+
+# Problem: Render build fails
+# Solution: Check all env variables are set correctly
+#           Make sure DATABASE_URL starts with postgresql:// not postgres://
+#           Fix: replace postgres:// with postgresql:// in DATABASE_URL
+
+# Problem: App too slow on Render free tier
+# Solution: Free tier sleeps after 15 min inactivity. First request takes ~30s.
+#           This is normal on the free plan.
+
+
+# ═══════════════════════════════════════════════
+# PROJECT STRUCTURE
+# ═══════════════════════════════════════════════
+#
+# stock_app/
+# ├── app.py                  ← Main Flask application
+# ├── requirements.txt        ← All Python packages
+# ├── Procfile                ← Render/Heroku startup command
+# ├── render.yaml             ← Render config
+# ├── .env.example            ← Template for your .env file
+# ├── .gitignore              ← Files NOT pushed to GitHub
+# ├── models/
+# │   └── models.py           ← Database tables (User, Prediction, Portfolio)
+# ├── utils/
+# │   ├── predict.py          ← LSTM + ML prediction engine
+# │   ├── sentiment.py        ← FinBERT news sentiment analysis
+# │   └── notifications.py    ← Email alerts + scheduler
+# └── templates/
+#     ├── index.html          ← Landing page
+#     ├── auth.html           ← Login + Register
+#     └── dashboard.html      ← Main app dashboard

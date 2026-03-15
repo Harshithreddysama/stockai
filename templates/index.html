@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StockAI — AI-Powered Stock Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#050a14;--surface:#0d1829;--border:#1a2d4a;
+  --text:#e8f0fe;--muted:#6b8ab0;--accent:#3b82f6;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --glow:rgba(59,130,246,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+/* grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px;opacity:.35;pointer-events:none;z-index:0
+}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 48px;
+  background:rgba(5,10,20,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border)
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;
+  background:linear-gradient(135deg,#3b82f6,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;
+  transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{padding:10px 24px;border-radius:8px;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;text-decoration:none;display:inline-flex;
+  align-items:center;gap:8px;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2563eb;transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--text);
+  border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* hero */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;align-items:center;
+  padding:120px 48px 80px;max-width:1200px;margin:0 auto
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);
+  padding:6px 14px;border-radius:100px;font-size:12px;
+  color:var(--accent);margin-bottom:28px;font-family:'DM Mono',monospace
+}
+.badge-dot{width:6px;height:6px;background:var(--green);
+  border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+h1{font-family:'Syne',sans-serif;font-size:clamp(42px,6vw,80px);
+  font-weight:800;line-height:1.05;margin-bottom:24px}
+h1 span{background:linear-gradient(135deg,#3b82f6,#06b6d4,#10b981);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:18px;color:var(--muted);max-width:520px;
+  line-height:1.7;margin-bottom:40px}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap}
+
+/* ticker */
+.ticker{
+  position:relative;z-index:1;
+  background:var(--surface);border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:14px 0;overflow:hidden
+}
+.ticker-inner{display:flex;gap:48px;animation:ticker 30s linear infinite;
+  width:max-content}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;font-size:13px;white-space:nowrap}
+.ticker-sym{color:var(--text);font-weight:500}
+.ticker-price{color:var(--muted)}
+.up{color:var(--green)}
+.down{color:var(--red)}
+
+/* features */
+.section{position:relative;z-index:1;padding:100px 48px;max-width:1200px;margin:0 auto}
+.section-label{font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);
+  font-weight:700;line-height:1.15;margin-bottom:48px}
+
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.feature-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:28px;
+  transition:all .3s;position:relative;overflow:hidden
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--glow);opacity:0;transition:.3s
+}
+.feature-card:hover{border-color:rgba(59,130,246,.4);transform:translateY(-4px)}
+.feature-card:hover::before{opacity:1}
+.feature-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px
+}
+.feature-title{font-family:'Syne',sans-serif;font-size:18px;
+  font-weight:700;margin-bottom:10px}
+.feature-desc{color:var(--muted);font-size:14px;line-height:1.7}
+
+/* stats */
+.stats-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:2px;background:var(--border);border-radius:16px;overflow:hidden;
+  margin:80px 0
+}
+.stat{background:var(--surface);padding:32px;text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+  background:linear-gradient(135deg,#3b82f6,#10b981);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{color:var(--muted);font-size:13px;margin-top:6px}
+
+/* how it works */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:32px;margin-top:48px}
+.step{text-align:center}
+.step-num{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(6,182,212,.2));
+  border:1px solid rgba(59,130,246,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:18px;font-weight:500;
+  color:var(--accent);margin:0 auto 20px
+}
+.step-title{font-family:'Syne',sans-serif;font-size:16px;
+  font-weight:700;margin-bottom:8px}
+.step-desc{color:var(--muted);font-size:13px;line-height:1.7}
+
+/* cta section */
+.cta-section{
+  position:relative;z-index:1;
+  margin:0 48px 100px;
+  background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(16,185,129,.1));
+  border:1px solid rgba(59,130,246,.25);
+  border-radius:24px;padding:72px 48px;text-align:center
+}
+.cta-section h2{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,44px);
+  font-weight:800;margin-bottom:16px}
+.cta-section p{color:var(--muted);font-size:16px;margin-bottom:36px}
+
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+  padding:32px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:var(--muted);font-size:13px
+}
+.disclaimer{
+  position:relative;z-index:1;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+  margin:0 48px;border-radius:12px;padding:16px 24px;
+  font-size:12px;color:#fca5a5;line-height:1.6
+}
+
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .nav-links{gap:16px}
+  .hero{padding:100px 20px 60px}
+  .section{padding:60px 20px}
+  .cta-section{margin:0 20px 60px;padding:48px 24px}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px 20px}
+  .disclaimer{margin:0 20px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">StockAI</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="/login" class="btn btn-outline">Login</a>
+    <a href="/register" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div>
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      AI-Powered · Real-time Analysis · News Sentiment
+    </div>
+    <h1>Invest smarter with<br/><span>AI-driven insights</span></h1>
+    <p class="hero-sub">
+      Our platform combines LSTM deep learning, global news sentiment analysis,
+      and real-time market data to give you clear BUY · HOLD · SELL signals.
+    </p>
+    <div class="hero-cta">
+      <a href="/register" class="btn btn-primary" style="font-size:16px;padding:14px 32px">
+        Start analyzing free →
+      </a>
+      <a href="#how-it-works" class="btn btn-outline" style="font-size:16px;padding:14px 32px">
+        See how it works
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="ticker">
+  <div class="ticker-inner" id="ticker1"></div>
+</div>
+
+<section class="section" id="features">
+  <div class="section-label">What we offer</div>
+  <div class="section-title">Everything you need to<br/>make informed decisions</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">LSTM Price Prediction</div>
+      <div class="feature-desc">Deep learning model trained on years of historical data predicts the next trading day's price with confidence scores.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📰</div>
+      <div class="feature-title">News Sentiment AI</div>
+      <div class="feature-desc">FinBERT — a finance-trained AI — analyzes hundreds of global news headlines in real-time to gauge market mood.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Interactive Dashboard</div>
+      <div class="feature-desc">Visual price charts, signal history, portfolio tracker, and performance analytics — all in one clean dashboard.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <div class="feature-title">Email Alerts</div>
+      <div class="feature-desc">Get notified instantly when your watchlist stocks trigger a BUY or SELL signal, so you never miss an opportunity.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💼</div>
+      <div class="feature-title">Portfolio Tracker</div>
+      <div class="feature-desc">Track your holdings, monitor real-time P&L, and compare your portfolio performance against AI signals.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <div class="feature-title">Global Stock Coverage</div>
+      <div class="feature-desc">Analyze any stock on NYSE, NASDAQ, BSE, NSE and more. Just enter the ticker symbol and get instant analysis.</div>
+    </div>
+  </div>
+</section>
+
+<div style="position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 48px">
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">LSTM</div>
+      <div class="stat-label">Deep learning model</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3-in-1</div>
+      <div class="stat-label">ML + News + Price data</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">Daily</div>
+      <div class="stat-label">Automated email alerts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">Free</div>
+      <div class="stat-label">Hosted on Render</div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="how-it-works">
+  <div class="section-label">The process</div>
+  <div class="section-title">How StockAI works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Enter a stock symbol</div>
+      <div class="step-desc">Type any stock ticker — AAPL, RELIANCE.NS, TSLA — and hit Analyze.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-num" style="display:none"></div>
+      <div class="step-num">02</div>
+      <div class="step-title">AI fetches & processes data</div>
+      <div class="step-desc">2 years of OHLCV data is fetched, cleaned, and fed into the LSTM model.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">News sentiment scan</div>
+      <div class="step-desc">FinBERT reads the latest 10 news headlines and scores them BULLISH / NEUTRAL / BEARISH.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">Get your signal</div>
+      <div class="step-desc">ML + News are combined into a final BUY / HOLD / SELL signal with full explanation.</div>
+    </div>
+  </div>
+</section>
+
+<div class="disclaimer">
+  ⚠️ <strong>Important Disclaimer:</strong> StockAI provides AI-generated signals for educational and informational purposes only.
+  This is NOT financial advice. Stock market investments involve significant risk and you may lose money.
+  Always conduct your own research and consult a qualified financial advisor before investing.
+  Past predictions do not guarantee future results.
+</div>
+
+<section class="cta-section">
+  <h2>Ready to analyze smarter?</h2>
+  <p>Create your free account and get your first analysis in under 2 minutes.</p>
+  <a href="/register" class="btn btn-primary" style="font-size:16px;padding:14px 40px">
+    Create free account →
+  </a>
+</section>
+
+<footer>
+  <div class="logo">StockAI</div>
+  <div>© 2024 StockAI · Built with Python, Flask, TensorFlow</div>
+  <div>For educational use only</div>
+</footer>
+
+<script>
+const stocks=[
+  {sym:'AAPL',price:'189.23',chg:'+1.2%',up:true},
+  {sym:'TSLA',price:'248.50',chg:'-0.8%',up:false},
+  {sym:'MSFT',price:'374.12',chg:'+0.5%',up:true},
+  {sym:'GOOGL',price:'140.89',chg:'+1.8%',up:true},
+  {sym:'AMZN',price:'178.35',chg:'-0.3%',up:false},
+  {sym:'NVDA',price:'495.22',chg:'+3.1%',up:true},
+  {sym:'RELIANCE.NS',price:'2445.60',chg:'+0.9%',up:true},
+  {sym:'TCS.NS',price:'3821.15',chg:'-0.4%',up:false},
+  {sym:'META',price:'348.90',chg:'+2.1%',up:true},
+  {sym:'NFLX',price:'489.75',chg:'+0.7%',up:true},
+];
+const doubled=[...stocks,...stocks];
+const t=document.getElementById('ticker1');
+t.innerHTML=doubled.map(s=>`
+  <div class="ticker-item">
+    <span class="ticker-sym">${s.sym}</span>
+    <span class="ticker-price">$${s.price}</span>
+    <span class="${s.up?'up':'down'}">${s.chg}</span>
+  </div>`).join('');
+</script>
+</body>
+</html>

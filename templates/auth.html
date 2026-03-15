@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% if mode=='register' %}Register{% else %}Login{% endif %} — StockAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050a14;--surface:#0d1829;--border:#1a2d4a;
+  --text:#e8f0fe;--muted:#6b8ab0;--accent:#3b82f6;--green:#10b981;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px;opacity:.3;pointer-events:none
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;
+  background:linear-gradient(135deg,#3b82f6,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:32px;position:relative;z-index:1}
+.card{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;padding:40px
+}
+.card-title{font-family:'Syne',sans-serif;font-size:24px;
+  font-weight:700;margin-bottom:6px}
+.card-sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+.form-group{margin-bottom:20px}
+label{display:block;font-size:13px;color:var(--muted);
+  margin-bottom:8px;font-weight:500}
+input{
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-size:15px;font-family:'DM Sans',sans-serif;
+  transition:border-color .2s,box-shadow .2s;outline:none
+}
+input:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+input::placeholder{color:var(--muted)}
+.submit-btn{
+  width:100%;padding:14px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:10px;
+  font-size:15px;font-weight:500;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;transition:all .2s;margin-top:8px
+}
+.submit-btn:hover{background:#2563eb;transform:translateY(-1px)}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.toggle{
+  text-align:center;margin-top:24px;
+  font-size:14px;color:var(--muted)
+}
+.toggle a{color:var(--accent);text-decoration:none}
+.toggle a:hover{text-decoration:underline}
+.error-msg{
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+  border-radius:8px;padding:12px 16px;
+  color:#fca5a5;font-size:13px;margin-bottom:20px;display:none
+}
+.success-msg{
+  background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);
+  border-radius:8px;padding:12px 16px;
+  color:#6ee7b7;font-size:13px;margin-bottom:20px;display:none
+}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+.flash-visible{display:block!important}
+{% endif %}
+{% endwith %}
+</style>
+</head>
+<body>
+<a href="/" class="logo">StockAI</a>
+<div class="card">
+  <div class="card-title">
+    {% if mode=='register' %}Create your account{% else %}Welcome back{% endif %}
+  </div>
+  <div class="card-sub">
+    {% if mode=='register' %}Start analyzing stocks with AI in minutes{% else %}Login to your StockAI dashboard{% endif %}
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat, msg in messages %}
+    <div class="error-msg flash-visible">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <div class="error-msg" id="errMsg"></div>
+  <div class="success-msg" id="okMsg"></div>
+
+  <form id="authForm">
+    {% if mode=='register' %}
+    <div class="form-group">
+      <label>Full name</label>
+      <input type="text" name="name" id="name" placeholder="Your name" required/>
+    </div>
+    {% endif %}
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" name="email" id="email" placeholder="you@example.com" required/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" id="password"
+             placeholder="{% if mode=='register' %}Min 6 characters{% else %}Your password{% endif %}" required/>
+    </div>
+    <button type="submit" class="submit-btn" id="submitBtn">
+      {% if mode=='register' %}Create account{% else %}Login{% endif %}
+    </button>
+  </form>
+
+  <div class="toggle">
+    {% if mode=='register' %}
+      Already have an account? <a href="/login">Login</a>
+    {% else %}
+      Don't have an account? <a href="/register">Register free</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const form=document.getElementById('authForm');
+const errMsg=document.getElementById('errMsg');
+const okMsg=document.getElementById('okMsg');
+const btn=document.getElementById('submitBtn');
+const mode='{{ mode }}';
+
+form.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  errMsg.style.display='none';
+  btn.disabled=true;
+  btn.textContent='Please wait...';
+
+  const body={email:document.getElementById('email').value,
+              password:document.getElementById('password').value};
+  if(mode==='register') body.name=document.getElementById('name').value;
+
+  try{
+    const r=await fetch(mode==='register'?'/register':'/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const d=await r.json();
+    if(r.ok){
+      okMsg.textContent='Success! Redirecting...';
+      okMsg.style.display='block';
+      setTimeout(()=>window.location.href=d.redirect||'/dashboard',800);
+    }else{
+      errMsg.textContent=d.error||'Something went wrong';
+      errMsg.style.display='block';
+      btn.disabled=false;
+      btn.textContent=mode==='register'?'Create account':'Login';
+    }
+  }catch{
+    errMsg.textContent='Network error. Please try again.';
+    errMsg.style.display='block';
+    btn.disabled=false;
+    btn.textContent=mode==='register'?'Create account':'Login';
+  }
+});
+</script>
+</body>
+</html>
